@@ -4,14 +4,21 @@
 #include "LoRa/lora.h"
 #include "Ultrasonic/ultrasonic.h"
 
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+
 #define ECHO_GPIO 12
 #define TRIGGER_GPIO 13
 #define MAX_DISTANCE_CM 600 // Maximum of 5 meters
 
+float distance;
+uint8_t send_distance[4];
+
+
 
 void ultrasonic_test(void *pvParameters)
 {
-    float distance;
 
     ultrasonic_sensor_t sensor = {
         .trigger_pin = TRIGGER_GPIO,
@@ -24,7 +31,7 @@ void ultrasonic_test(void *pvParameters)
         esp_err_t res = ultrasonic_measure(&sensor, MAX_DISTANCE_CM, &distance);
 
         if (res == ESP_OK) {
-            printf("Distance: %0.04f m\n", distance);
+            // printf("Distance: %0.04f m\n", distance);
         } // Print error
         else {
             printf("Error %d: ", res);
@@ -39,6 +46,7 @@ void ultrasonic_test(void *pvParameters)
                     printf("Echo timeout (i.e. distance too big)\n");
                     break;
                 default:
+                     // continue;
                     printf("%s\n", esp_err_to_name(res));
             }
         }
@@ -52,10 +60,15 @@ void task_tx(void *p)
    lora_init();
    lora_set_frequency(915e6);
    lora_enable_crc();
+   void float_uint8_t(float *val, uint8_t data[]){
+      memcpy(data, val, sizeof(float));
+   }
+   
    for(;;) {
+      float_uint8_t(&distance,send_distance);
       vTaskDelay(pdMS_TO_TICKS(1000));
-      lora_send_packet((uint8_t*)"Hello", 5);
-      printf("packet sent...\n");
+      lora_send_packet((uint8_t*)send_distance, 4);
+      printf("packet sent: %f...\n", distance);
    }
 }
 
