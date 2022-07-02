@@ -1,2 +1,2 @@
-idf_component_register(SRCS "lora.c"
+idf_component_register(SRCS "LoRa/lora.c" "Ultrasonic/ultrasonic.c"
 					INCLUDE_DIRS ".")
